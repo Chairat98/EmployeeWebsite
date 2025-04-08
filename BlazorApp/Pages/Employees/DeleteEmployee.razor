@@ -1,0 +1,21 @@
+﻿@page "/Employees/Delete/{Id:guid}"
+
+<h1 class="mb-3">Delete Employee</h1>
+<p>Are you sure you want to delete employee with <br/> ID: @Id </p>
+<button class="btn btn-danger" @onclick="DeleteTheEmployee">Delete</button>
+<a class="btn btn-secondary" href="/Employees">Cancel</a>
+
+@inject HttpClient Http
+@inject NavigationManager navManager
+
+@code {
+    [Parameter]
+    public Guid Id { set; get; }
+
+    protected async Task DeleteTheEmployee()
+    {
+        var response = await Http.DeleteAsync($"http://localhost:5037/api/employees/{Id}");
+
+        navManager.NavigateTo("/Employees");
+    }
+}

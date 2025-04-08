@@ -1,0 +1,76 @@
+﻿@page "/Employees/CreateEmployee"
+@using BlazorApp.Models
+
+<div class="row">
+    <div class="col-lg-8">
+        <h1 class="mb-5">New Employee</h1>
+
+        <div class="row mb-3">
+            <label class="col-mb-4 col-form-label">Name</label>
+            <div class="col-md-8">
+                <input class="form-control" @bind="EmployeeData.Name">
+                <span class="text-danger">@Errors["Name"]?[0]</span>
+            </div>
+        </div>
+        <div class="row mb-3">
+            <label class="col-mb-4 col-form-label">Email</label>
+            <div class="col-md-8">
+                <input class="form-control" @bind="EmployeeData.Email">
+                <span class="text-danger">@Errors["Email"]?[0]</span>
+            </div>
+        </div>
+        <div class="row mb-3">
+            <label class="col-mb-4 col-form-label">Phone number</label>
+            <div class="col-md-8">
+                <input class="form-control" @bind="EmployeeData.Phone">
+            </div>
+        </div>
+        <div class="row mb-3">
+            <label class="col-mb-4 col-form-label">Salary</label>
+            <div class="col-md-8">
+                <input class="form-control" @bind="EmployeeData.Salary"/>
+            </div>
+        </div>
+        <div class="row">
+            <div class="offset-mb-4 col-md-4 d-grid">
+                <button class="btn btn-primary" @onclick="SaveEmployee">Submit</button>
+            </div>
+            <div class="col-md-4 d-grid">
+                <a class="btn btn-outline-primary" href="/Employees">Cancel</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@inject HttpClient Http
+@inject NavigationManager navManager
+@using System.Text.Json.Nodes
+@code {
+    public EmployeeDto EmployeeData { set; get; } = new();
+    public JsonNode Errors { set; get; } = new JsonObject();
+
+    public async Task SaveEmployee()
+    {
+        var response = await Http.PostAsJsonAsync("http://localhost:5037/api/employees",EmployeeData);
+        if (response.IsSuccessStatusCode)
+        {
+            //redirect to list of employees
+            navManager.NavigateTo("/Employees");
+        }
+        else
+        {
+            var strResponse = await response.Content.ReadAsStringAsync();
+            Console.WriteLine("Json Response: \n" + strResponse);
+
+            try
+            {
+                var jsonResponse = JsonNode.Parse(strResponse);
+                Errors = jsonResponse?["errors"] ?? new JsonObject();
+            }
+            catch (Exception ex)
+            {
+                
+            }
+        }
+    }
+}

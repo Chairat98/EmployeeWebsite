@@ -1,0 +1,50 @@
+﻿@page "/Employees"
+@using BlazorApp.Models
+
+<h1 class="text-center mb-3">List of Employees</h1>
+<a class="btn btn-primary mb-3" href="/Employees/CreateEmployee">New Employee</a>
+
+@if (employees == null)
+{
+    <p><em>Loading...(if it's takes more than 5 seconds, check API connection )</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Salary</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var employee in employees)
+            {
+                <tr>
+                    <td>@employee.Id</td>
+                    <td>@employee.Name</td>
+                    <td>@employee.Email</td>
+                    <td>@employee.Phone</td>
+                    <td>@employee.Salary</td>
+                    <td style="white-space:nowrap">
+                       <a class="btn btn-primary btn-sm" href="/Employees/Edit/@employee.Id">EDIT</a>
+                        <a class="btn btn-danger btn-sm" href="/Employees/Delete/@employee.Id">Delete</a>
+                    </td>
+                </tr>
+            }
+
+        </tbody>
+    </table>
+}
+@inject HttpClient Http
+@code {
+    private List<Employee>? employees;
+    protected override async Task OnInitializedAsync()
+    {
+        employees = await Http.GetFromJsonAsync<List<Employee>>("http://localhost:5037/api/employees");
+    }
+
+}

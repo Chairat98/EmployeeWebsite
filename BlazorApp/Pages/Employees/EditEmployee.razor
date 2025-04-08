@@ -1,0 +1,110 @@
+﻿@page "/Employees/Edit/{Id:guid}"
+@using BlazorApp.Models
+@using System.Text.Json.Nodes
+
+<div class="row">
+    <div class="col-lg-8">
+        <h1 class="mb-5">Edit Employee</h1>
+
+        @if (employee == null)
+        {
+            <p><em>gg everybody gg</em></p>
+        }
+        else
+        {
+            <div class="row mb-3">
+                <label class="col-mb-4 col-form-label">Employee Id</label>
+                <div class="col-md-8">
+                    <input class="form-control" value="@Id" readonly>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label class="col-mb-4 col-form-label">Name</label>
+                <div class="col-md-8">
+                    <input class="form-control" @bind="EmployeeData.Name">
+                    <span class="text-danger">@Errors["Name"]?[0]</span>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label class="col-mb-4 col-form-label">Email</label>
+                <div class="col-md-8">
+                    <input class="form-control" @bind="EmployeeData.Email">
+                    <span class="text-danger">@Errors["Email"]?[0]</span>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label class="col-mb-4 col-form-label">Phone number</label>
+                <div class="col-md-8">
+                    <input class="form-control" @bind="EmployeeData.Phone">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label class="col-mb-4 col-form-label">Salary</label>
+                <div class="col-md-8">
+                    <input class="form-control" @bind="EmployeeData.Salary" />
+                </div>
+            </div>
+            <div class="row">
+                <div class="offset-mb-4 col-md-4 d-grid">
+                    <button class="btn btn-primary" @onclick="SaveEmployee">Submit</button>
+                </div>
+                <div class="col-md-4 d-grid">
+                    <a class="btn btn-outline-primary" href="/Employees">Cancel</a>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@inject HttpClient Http
+@inject NavigationManager navManager
+
+@code {
+    [Parameter]
+    public Guid Id { set; get; }
+    public Employee? employee = null;
+    public EmployeeDto EmployeeData { set; get; } = new();
+    public JsonNode Errors { set; get; } = new JsonObject();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            employee = await Http.GetFromJsonAsync<Employee>($"http://localhost:5037/api/employees/{Id}");
+
+            EmployeeData.Name = employee?.Name ?? "";
+            EmployeeData.Email = employee?.Email ?? "";
+            EmployeeData.Phone = employee?.Phone ?? "";
+            EmployeeData.Salary = employee.Salary;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Exception : " + ex.Message);
+        }
+    }
+    public async Task SaveEmployee()
+    {
+        var response = await Http.PutAsJsonAsync($"http://localhost:5037/api/employees/{Id}", EmployeeData);
+
+        if (response.IsSuccessStatusCode)
+        {
+            //redirect to list of employees
+            navManager.NavigateTo("/Employees");
+        }
+        else
+        {
+            var strResponse = await response.Content.ReadAsStringAsync();
+
+            try
+            {
+                var jsonResponse = JsonNode.Parse(strResponse);
+                Errors = jsonResponse?["errors"] ?? new JsonObject();
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }
+    }
+
+}
